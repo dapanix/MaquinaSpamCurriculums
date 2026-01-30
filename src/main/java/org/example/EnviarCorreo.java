@@ -14,14 +14,16 @@ import jakarta.mail.internet.MimeMultipart;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Time;
 import java.util.*;
 
 public class EnviarCorreo {
 
-    public static void main(String[] args) {
+    public static void main(String[] args){
         int cont = 0;
 
         OllamaClient_json ollama = new OllamaClient_json();
@@ -35,7 +37,6 @@ public class EnviarCorreo {
             return;
         }
         List<String> listaEmails = CrearCorreo.crearCorreos(listaEmpresas);
-
 
 
         if (listaEmails.isEmpty()) {
@@ -71,7 +72,9 @@ public class EnviarCorreo {
         });
 
         // 4. PDF adjunto
-        String rutaPdf = System.getProperty("user.home") + "/Desktop/curriculumParaGmail.pdf";
+        String rutaPdf = System.getProperty("user.home") + "/Desktop/curriculumDanielFernandez.pdf";
+        //en este caso quiero añadir mi CV al email, esto es opcional, si se quiere mandar un curriculum
+        // basta con ajustar la ruta y el nombre del archivo
         File pdf = new File(rutaPdf);
 
         if (!pdf.exists()) {
@@ -82,28 +85,23 @@ public class EnviarCorreo {
         System.out.println("Iniciando envío a " + listaEmails.size() + " empresas...");
 
 
-        String cabecera = seleccionarTextoAleatorio("Cabecera", 3);
-        String cuerpo = seleccionarTextoAleatorio("CuerpoEmail", 3);
-
         // 5. Envío de correos (UNO A UNO)
         for (String email : listaEmails) {
             try {
+                //codigo para elegir aleatoriamente el texto para el cuerpo y cabecera del correo
+                //he hecho 3 tipos distintos de cada para que sea mas dificil detectar el correo como spam
+                ArrayList<String> textoTotal;
+                textoTotal=cabeceraYCuerpo();
+                String cabecera = textoTotal.get(0);
+                String cuerpo = textoTotal.get(1);
+
                 Message msg = new MimeMessage(session);
                 msg.setFrom(new InternetAddress(usuario));
                 msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(email));
                 msg.setSubject(cabecera);
 
                 MimeBodyPart texto = new MimeBodyPart();
-                texto.setText(
-                        "Buenos días,\n\n" +
-                                "Mi nombre es Daniel Fernández y soy estudiante de segundo curso del ciclo formativo " +
-                                "de Desarrollo de Aplicaciones Multiplataforma (DAM).\n\n" +
-                                "Actualmente me encuentro en búsqueda de una empresa en la que poder realizar las prácticas " +
-                                "y me gustaría poder hacerlo en una organización como la vuestra.\n\n" +
-                                "Adjunto a este correo mi currículum para su valoración.\n\n" +
-                                "Un cordial saludo,\n" +
-                                "Daniel Fernández"
-                );
+                texto.setText(cuerpo);
 
                 MimeBodyPart adjunto = new MimeBodyPart();
                 adjunto.attachFile(pdf);
@@ -113,18 +111,18 @@ public class EnviarCorreo {
                 multipart.addBodyPart(adjunto);
 
                 msg.setContent(multipart);
-
                 Transport.send(msg);
                 cont++;
                 System.out.println("(" + cont + "/" + listaEmails.size() + ") Correo enviado a: " + email);
 
                 // Pausa para evitar bloqueo SMTP (Gmail es estricto, mejor 2 segundos si son muchos)
                 Thread.sleep(2000);
+                System.out.println("correo enviado a: " + email);
 
             } catch (MessagingException | IOException e) {
                 System.err.println("Error enviando correo a: " + email);
                 e.printStackTrace();
-            } catch (InterruptedException e) {
+            } catch (InterruptedException | URISyntaxException e) {
                 Thread.currentThread().interrupt();
                 break;
             }
@@ -134,37 +132,59 @@ public class EnviarCorreo {
     }
 
 
-
-
-
-
-
-    private String seleccionarTextoAleatorio(String prefijo, int conteo) throws IOException {
+    private static ArrayList<String> cabeceraYCuerpo() throws IOException, URISyntaxException {
         Random random = new Random();
-        // Genera un número aleatorio entre 1 y el conteo (ambos inclusive)
-        int numeroAleatorio = random.nextInt(conteo) + 1;
+        int ranCabecera = random.nextInt(3) + 1;
+        int ranCuerpo = random.nextInt(3) + 1;
+        Path base = Path.of("C:/Users/Dani/IdeaProjects/MaquinaSpamCurriculums/");
 
-        String nombreArchivo = prefijo + numeroAleatorio;
-        // Construye la ruta al archivo. Ajusta la ruta si los archivos no están en la raíz.
-        Path rutaArchivo = Paths.get(nombreArchivo);
 
-        // Lee todas las líneas del archivo y las une en una sola cadena
-        List<String> lineas = Files.readAllLines(rutaArchivo); //
-        return String.join(System.lineSeparator(), lineas);
-    }
-    public ArrayList<String> cargarEmailAleatorio() {
-        try {
-            String cabecera = seleccionarTextoAleatorio("Cabecera", 3);
-            String cuerpo = seleccionarTextoAleatorio("CuerpoEmail", 3);
+        String cabecera = "";
+        String cuerpo = "";
 
-            ArrayList<String> listaDevolver= new ArrayList<String>();
-            listaDevolver.add(cabecera);
-            listaDevolver.add(cuerpo);
-            return (listaDevolver);     // Usa setText() para el cuerpo
+        switch (ranCabecera) {
+            case 1:
+                Path pathCabecera1 = Paths.get(Objects.requireNonNull(EnviarCorreo.class.getClassLoader().getResource("Cabecera1")).toURI());
+                 cabecera = Files.readString(pathCabecera1);
 
-        } catch (IOException e) {
-            System.err.println("Error al leer los archivos: " + e.getMessage());
-            // Maneja la excepción adecuadamente en tu aplicación
+
+                break;
+            case 2:
+                Path pathCabecera2 = Paths.get(Objects.requireNonNull(EnviarCorreo.class.getClassLoader().getResource("Cabecera1")).toURI());
+                 cabecera = Files.readString(pathCabecera2);
+
+
+                break;
+            case 3:
+                Path pathCabecera3 = Paths.get(Objects.requireNonNull(EnviarCorreo.class.getClassLoader().getResource("Cabecera1")).toURI());
+                cabecera = Files.readString(pathCabecera3);
+
+
+                break;
         }
+
+        switch (ranCuerpo) {
+            case 1:
+
+                Path pathCuerpo1 = Paths.get(Objects.requireNonNull(EnviarCorreo.class.getClassLoader().getResource("CuerpoEmail1")).toURI());
+                cuerpo = Files.readString(pathCuerpo1);
+
+                break;
+            case 2:
+                Path pathCuerpo2 = Paths.get(Objects.requireNonNull(EnviarCorreo.class.getClassLoader().getResource("CuerpoEmail1")).toURI());
+                cuerpo = Files.readString(pathCuerpo2);
+                break;
+            case 3:
+                Path pathCuerpo3 = Paths.get(Objects.requireNonNull(EnviarCorreo.class.getClassLoader().getResource("CuerpoEmail1")).toURI());
+                cuerpo = Files.readString(pathCuerpo3);
+                break;
+        }
+
+        ArrayList<String> resultado = new ArrayList<>();
+        resultado.add(cabecera);
+        resultado.add(cuerpo);
+        return resultado;
     }
+
+
 }

@@ -15,13 +15,19 @@ public class CrearCorreo {
 
         List<String> emails = new ArrayList<>();
 
-        for (String p : prefijos) {
+
             for (String empresa :listaEmpresas) {
 
-                emails.add(p + empresa + ".com");
-                emails.add(p + empresa + ".es");
+                emails.add(prefijos.get(0) + empresa + ".com");
+                emails.add(prefijos.get(0) + empresa + ".es");
+                emails.add(prefijos.get(1) + empresa + ".com");
+                emails.add(prefijos.get(1) + empresa + ".es");
+
+
+
+
             }
-        }
+
 
         return emails;
     }

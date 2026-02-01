@@ -1,9 +1,1 @@
-# MaquinaSpamCurriculums
-Bot para encontrar correos y mandar correos automatizados
-
-
-        setEmails.add("@mapfre.es");
-        setEmails.add("iberia@leyton.com");
-        setEmails.add("infoweb@nttdata.com");
-        setEmails.add("seleccion@es.logicalis.com");
-
+ashb qnyc pokg limfgo dapa tlmq edhj izyf eneo apad pkzf qirp jkln iube jdsp 

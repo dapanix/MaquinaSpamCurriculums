@@ -14,12 +14,13 @@ import jakarta.mail.internet.MimeMultipart;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Time;
+import java.nio.charset.StandardCharsets;
+
 import java.util.*;
+
+
 
 public class EnviarCorreo {
 
@@ -136,7 +137,6 @@ public class EnviarCorreo {
         Random random = new Random();
         int ranCabecera = random.nextInt(3) + 1;
         int ranCuerpo = random.nextInt(3) + 1;
-        Path base = Path.of("C:/Users/Dani/IdeaProjects/MaquinaSpamCurriculums/");
 
 
         String cabecera = "";
@@ -144,20 +144,15 @@ public class EnviarCorreo {
 
         switch (ranCabecera) {
             case 1:
-                Path pathCabecera1 = Paths.get(Objects.requireNonNull(EnviarCorreo.class.getClassLoader().getResource("Cabecera1")).toURI());
-                 cabecera = Files.readString(pathCabecera1);
-
+                cabecera=leerArchivos("Cabecera1");
 
                 break;
             case 2:
-                Path pathCabecera2 = Paths.get(Objects.requireNonNull(EnviarCorreo.class.getClassLoader().getResource("Cabecera1")).toURI());
-                 cabecera = Files.readString(pathCabecera2);
-
+                cabecera=leerArchivos("Cabecera2");
 
                 break;
             case 3:
-                Path pathCabecera3 = Paths.get(Objects.requireNonNull(EnviarCorreo.class.getClassLoader().getResource("Cabecera1")).toURI());
-                cabecera = Files.readString(pathCabecera3);
+                cabecera=leerArchivos("Cabecera3");
 
 
                 break;
@@ -165,18 +160,14 @@ public class EnviarCorreo {
 
         switch (ranCuerpo) {
             case 1:
-
-                Path pathCuerpo1 = Paths.get(Objects.requireNonNull(EnviarCorreo.class.getClassLoader().getResource("CuerpoEmail1")).toURI());
-                cuerpo = Files.readString(pathCuerpo1);
+                cuerpo=leerArchivos("CuerpoEmail1");
 
                 break;
             case 2:
-                Path pathCuerpo2 = Paths.get(Objects.requireNonNull(EnviarCorreo.class.getClassLoader().getResource("CuerpoEmail1")).toURI());
-                cuerpo = Files.readString(pathCuerpo2);
+                cuerpo=leerArchivos("CuerpoEmail2");
                 break;
             case 3:
-                Path pathCuerpo3 = Paths.get(Objects.requireNonNull(EnviarCorreo.class.getClassLoader().getResource("CuerpoEmail1")).toURI());
-                cuerpo = Files.readString(pathCuerpo3);
+                cuerpo=leerArchivos("CuerpoEmail3");
                 break;
         }
 
@@ -184,6 +175,26 @@ public class EnviarCorreo {
         resultado.add(cabecera);
         resultado.add(cuerpo);
         return resultado;
+    }
+
+
+    public static String leerArchivos(String nombreArchivo) {
+
+        try (InputStream is = Thread.currentThread()
+                .getContextClassLoader()
+                .getResourceAsStream(nombreArchivo)) {
+
+            if (is == null) {
+                throw new IllegalArgumentException(
+                        "No se encontró el recurso: " + nombreArchivo);
+            }
+
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Error leyendo el recurso: " + nombreArchivo, e);
+        }
     }
 
 

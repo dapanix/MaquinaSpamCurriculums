@@ -2,14 +2,11 @@ package org.example;
 
 import java.io.*;
 import java.net.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import org.json.JSONObject;
+
 
 public class OllamaClient_json{
 
@@ -51,48 +48,49 @@ public class OllamaClient_json{
 
     public List<String> devolverListaEmpresas() throws Exception {
 
-        Path pathTxt = Paths.get(Objects.requireNonNull(EnviarCorreo.class.getClassLoader().getResource("listaEmpresasYaEnviadas")).toURI());
-        String txt = Files.readString(pathTxt);
-
-
         List<String> listaEmpresas = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(txt))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                listaEmpresas.add(line);
-            }
-        }
-        String resultado = String.join(",", listaEmpresas);
-        String prompt = "antes de emprezar: TIENES QUE RESPONDER UNICAMENTE LA LISTA DE EMPRESAS SEPARADA POR COMAS Y SIN ESPACIOS, nada mas, ningun comentario de mas, no quiero ninguna palabra en tu respuesta" +
-                "que no sea el nombre de una empresa, ni introduccion para el prompt, ni  descripcion de las empresas, NADA que no sea el titulo de" +
-                "las empresas condicion crucial, sabiendo esto dame una lista con 20 empresas de calidad que y que cada una cumpla las siguientes condiciones:\n" +
-                "1.que sea una empresa de calidad y relativamente grande, en el caso de que en la lista de empresas que te mando a continuación sea muy grande" +
-                " puedes incorporar empresas mas pequeñas no hay problema, lo que no puedes hacer es repetir empresas" +
-                "\n2. que sea una empresa que trabaje en el sector de la informatica" +
-                "(preferiblemente en el desarrollo de software, desarrollo de aplicaciones multimedia)" +
-                "\n3.MUY IMPORTANTE: las empresas que me des no pueden tener espacios entre ellas, ni puntos, por ejemplo:microsoft o en el caso de que sea una un nombre" +
-                "separado por espacios como Cisco Systems, debes mandarlo todo junto, en este caso seria:CiscoSystems" +
-                "\n5.MUY IMPORTANTE: esa lista de empresas no puede tener ninguna empresa de la siguiente lista (\n"+resultado+") en el caso de que no haya " +
-                "la lista esta entre parentesis, en el caso de no haber nada entre parentesis ignora la condicion 4, añade las listas que desees teniendo en cuenta las anteriores condiciones";
+
+        // 1. Leer estado actual desde el JSON
+        EstadoApp estado = JSONManager.leer();
+
+        // 2. Construir lista de empresas ya usadas
+        String resultado = String.join(",", estado.empresasEnviadas);
+
+        // 3. Construir prompt
+        String prompt =
+                "antes de emprezar: TIENES QUE RESPONDER UNICAMENTE LA LISTA DE EMPRESAS SEPARADA POR COMAS Y SIN ESPACIOS, nada mas, ningun comentario de mas, no quiero ninguna palabra en tu respuesta" +
+                        "que no sea el nombre de una empresa, ni introduccion para el prompt, ni  descripcion de las empresas, NADA que no sea el titulo de" +
+                        "las empresas condicion crucial, sabiendo esto dame una lista con 20 empresas de calidad que y que cada una cumpla las siguientes condiciones:\n" +
+                        "1.que sea una empresa de calidad y relativamente grande...\n" +
+                        "2. que sea una empresa que trabaje en el sector de la informatica\n" +
+                        "3.MUY IMPORTANTE: las empresas que me des no pueden tener espacios...\n" +
+                        "5.MUY IMPORTANTE: esa lista de empresas no puede tener ninguna empresa de la siguiente lista (\n"
+                        + resultado + ")";
+
+        // 4. Llamar a Ollama
         String raw = ask("llama3", prompt);
-        String respuestaString =extraerResponse(raw);
-        String regex=",";
-        listaEmpresas.clear();
-        listaEmpresas = new ArrayList<>(List.of(respuestaString.split(regex)));
+        String respuestaString = extraerResponse(raw);
+
+        // 5. Parsear respuesta
+        listaEmpresas = new ArrayList<>(List.of(respuestaString.split(",")));
+
         for (int i = 0; i < listaEmpresas.size(); i++) {
             listaEmpresas.set(i, listaEmpresas.get(i).trim());
         }
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(txt))) {
-            for (String elemento : listaEmpresas) {
-                System.out.println(elemento);
-                bw.write(elemento.trim());
-                bw.newLine();
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return listaEmpresas.subList(Math.max(0, listaEmpresas.size() - 20), listaEmpresas.size());
 
+        // 6. Actualizar estado persistente
+        for (String empresa : listaEmpresas) {
+            estado.agregarEmpresa(empresa);
+        }
+
+        JSONManager.escribir(estado);
+
+        // 7. Devolver las últimas 20
+        return listaEmpresas.subList(
+                Math.max(0, listaEmpresas.size() - 20),
+                listaEmpresas.size()
+        );
     }
+
 }
 

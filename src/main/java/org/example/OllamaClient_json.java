@@ -36,9 +36,7 @@ public class OllamaClient_json{
             while ((line = br.readLine()) != null) {
                 response.append(line);
             }
-        }
-
-        return response.toString();
+        }return response.toString();
     }
 
     static String extraerResponse(String json) {
@@ -48,15 +46,11 @@ public class OllamaClient_json{
 
     public List<String> devolverListaEmpresas() throws Exception {
 
-        List<String> listaEmpresas = new ArrayList<>();
+        List<String> listaEmpresas;
 
-        // 1. Leer estado actual desde el JSON
         EstadoApp estado = JSONManager.leer();
 
-        // 2. Construir lista de empresas ya usadas
         String resultado = String.join(",", estado.empresasEnviadas);
-
-        // 3. Construir prompt
         String prompt =
                 "antes de emprezar: TIENES QUE RESPONDER UNICAMENTE LA LISTA DE EMPRESAS SEPARADA POR COMAS Y SIN ESPACIOS, nada mas, ningun comentario de mas, no quiero ninguna palabra en tu respuesta" +
                         "que no sea el nombre de una empresa, ni introduccion para el prompt, ni  descripcion de las empresas, NADA que no sea el titulo de" +
@@ -67,25 +61,22 @@ public class OllamaClient_json{
                         "5.MUY IMPORTANTE: esa lista de empresas no puede tener ninguna empresa de la siguiente lista (\n"
                         + resultado + ")";
 
-        // 4. Llamar a Ollama
         String raw = ask("llama3", prompt);
         String respuestaString = extraerResponse(raw);
+        System.out.println(respuestaString);
 
-        // 5. Parsear respuesta
         listaEmpresas = new ArrayList<>(List.of(respuestaString.split(",")));
 
         for (int i = 0; i < listaEmpresas.size(); i++) {
             listaEmpresas.set(i, listaEmpresas.get(i).trim());
         }
 
-        // 6. Actualizar estado persistente
+
         for (String empresa : listaEmpresas) {
             estado.agregarEmpresa(empresa);
         }
 
         JSONManager.escribir(estado);
-
-        // 7. Devolver las últimas 20
         return listaEmpresas.subList(
                 Math.max(0, listaEmpresas.size() - 20),
                 listaEmpresas.size()

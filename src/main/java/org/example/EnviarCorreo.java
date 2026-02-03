@@ -1,3 +1,4 @@
+/*
 package org.example;
 
 import jakarta.mail.Authenticator;
@@ -19,7 +20,6 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 
 import java.util.*;
-
 
 
 public class EnviarCorreo {
@@ -197,5 +197,6 @@ public class EnviarCorreo {
         }
     }
 
-
 }
+
+ */
